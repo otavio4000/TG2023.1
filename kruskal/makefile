@@ -3,7 +3,7 @@ CC = clang++
 name = kruskal.exe
 else
 CC = g++
-name = kruskal.out
+name = kruskal.bin
 endif
 
 RUN_ARGS = -f exemple.txt -s
