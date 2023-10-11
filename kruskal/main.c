@@ -198,18 +198,14 @@ int main(int argc, char *argv[]) {
     mergeSort(arestas, 0, g->n - 2, arrAux, 0);
     i = -1;
     if(outFile != NULL){
-      fprintf(outFile, "%d: [ ", tot);
       while(++i < g->n - 1){
-        fprintf(outFile, "(%d,%d):%d ", arestas[i][0] + 1, arestas[i][1] + 1, arestas[i][2]);
+        fprintf(outFile, "(%d,%d) ", arestas[i][0] + 1, arestas[i][1] + 1);
       }
-      fprintf(outFile, " ]\n");
       fclose(outFile);
     }else{
-      printf("%d: [ ", tot);
       while(++i < g->n - 1){
-        printf("(%d,%d):%d ", arestas[i][0] + 1, arestas[i][1] + 1, arestas[i][2]);
+        printf("(%d,%d) ", arestas[i][0] + 1, arestas[i][1] + 1);
       }
-      printf(" ]\n");
     }
   }else{
     if(outFile != NULL){
