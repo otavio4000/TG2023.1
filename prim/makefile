@@ -1,3 +1,3 @@
 CC=g++
 all:
-	$(CC) prim.cpp -o prim -Wall
+	$(CC) main.cpp -o prim.bin -Wall
