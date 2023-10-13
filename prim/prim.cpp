@@ -1,152 +1,273 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <queue>
-#define DEBUG if(1)
-#define INFINITY 100000
+#include <stdlib.h>
+#include <bits/stdc++.h>
+#include <stdio.h>
+#include <limits.h>
+#define MAX_LINE 305
 
+using namespace std;
+typedef struct{
+  int n, m;
+  int **arestas;
+}GRAFO;
 
-void prim(std::vector<std::vector<int>> graph, int s, int pre[], int cost[]){
-    int len_v = graph[0].size();
-    int pas[len_v];
-    for (int i=0; i<len_v; ++i){
-        cost[i]=INFINITY;
-        pre[i]=-1;
-        pas[i]=0;
-    }
-    cost[s]=0;
-    pre[s]=s;
-    std::priority_queue<std::pair<int, int>> h = std::priority_queue<std::pair<int, int>>();
-    h.push({0,s});
-    while (!h.empty()){
-        // int vert_c = h.top().first;
-        int vert_v = h.top().second;
-        h.pop();
-        if (pas[vert_v]==1){continue;}
-        else{pas[vert_v]=1;}
-        for (int z=0; z<len_v; ++z){
-            if (pas[z]==0 && graph[vert_v][z]!=0 && cost[z]>graph[vert_v][z]){
-                // DEBUG{std::cout<<"HERE\n";}
-                cost[z]=graph[vert_v][z];
-                h.push({-cost[z],z});
-                pre[z]=vert_v;
-            }
-        }
-    }
+void freeGRAFO(GRAFO *g){
+  int i = -1;
+  while(++i < g->m){
+    free(g->arestas[i]);
+  }
+  free(g->arestas);
+  free(g);
 }
 
+typedef struct{
+  int *pai;
+  int *rank;
+} SET;
 
-int main(int argv, char** argc){
-    for (int index_arg=0; index_arg<argv; index_arg++){
-        // DEBUG{std::cout<<"AQUUI TA INDO!! "<<argc[index_arg]<<index_arg<<"\n";}
-        if (argc[index_arg][0]=='-' && argc[index_arg][1]=='f'){
-            FILE* file = fopen(argc[index_arg+1],"r");
-            if (file==NULL){
-                std::cout<<"File not found.\n";
-                return 0;
-            }
-            // DEBUG{std::cout<<"NAMEFILE="<<argc[index_arg+1]<<"\n";}
-            int n, m;
-            fscanf(file, "%d %d", &n, &m);
-            // std::cin>>n>>m;
-            std::vector<std::vector<int>> graph = std::vector<std::vector<int>>(n, std::vector<int>(n,0));
-            for (int i=0; i<m; ++i){
-                int a, b, w;
-                fscanf(file, "%d %d %d", &a, &b, &w);
-                graph[a-1][b-1]=w;
-                graph[b-1][a-1]=w;
-            }
+void freeSET(SET *s){
+  free(s->pai);
+  free(s->rank);
+  free(s);
+}
 
-            int init = 1;
-            for (int index_arg2=0; index_arg2<argv; index_arg2++){
-                if (argc[index_arg2][0]=='-' && argc[index_arg2][1]=='i'){
-                    init = std::stoi(argc[index_arg2+1])-1;
-                    break;
-                }
-            }
-            int previews[n];
-            int cost_weight[n];
-            prim(graph, init, previews, cost_weight);
+void swap(int *a, int *b){
+  int temp = *a;
+  *a = *b;
+  *b = temp;
+}
 
-            int order = 0;
-            for (int index_arg3=0; index_arg3<argv; index_arg3++){
-                if (argc[index_arg3][0]=='-' && argc[index_arg3][1]=='s'){order=1;break;}
-            }
-            if (order==0){
-                // std::cout<<"RESULT:\n";
-                int t=0;
-                for (int l=0; l<n; ++l){
-                    t+=cost_weight[l];
-                    // std::cout << "(" << previews[l]<<","<<cost_weight[l]<<") ";
-                    // std::cout<<"\n";
-                }
-                std::cout<<t<<"\n";
-            }
-            else if (order==1){
-                // std::cout<<"ERROR 1\n";
-                std::priority_queue<std::pair<int, int>> res = std::priority_queue<std::pair<int, int>>();
-                // std::cout<<"ERROR 2\n";
-                int t = 0;
-                for (int l=0; l<n; ++l){
-                    t+=cost_weight[l];
-                    res.push({-cost_weight[l],previews[l]});
-                }
-                for (int k=0; k<n; ++k){
-                    std::cout << "(" << res.top().second<<","<<-res.top().first<<") ";
-                    // std::cout<<"\n";
-                    res.pop();
-                }
-                std::cout<<"\n";
-            }
+SET *makeSet(int n){
+  int i = -1;
+  SET *s = (SET*) malloc(sizeof(SET));
+  s->pai = (int*) malloc(n * sizeof(int));
+  s->rank = (int*) malloc(n * sizeof(int));
+  while(++i < n){
+    s->pai[i] = i;
+    s->rank[i] = 0;
+  }
+  return s;
+}
 
-            for (int index_arg4=0; index_arg4<argv; index_arg4++){
-                if (argc[index_arg4][0]=='-' && argc[index_arg4][1]=='o'){
-                    FILE *savefile = fopen(argc[index_arg4+1],"w");
-                    
-                    int order = 0;
-                    for (int index_arg3=0; index_arg3<argv; index_arg3++){
-                        if (argc[index_arg3][0]=='-' && argc[index_arg3][1]=='s'){order=1;break;}
-                    }
-                    if (order==0){
-                        // std::cout<<"RESULT:\n";
-                        int t=0;
-                        for (int l=0; l<n; ++l){
-                            t+=cost_weight[l];
-                            fprintf(savefile, "(%d,%d) ", previews[l], cost_weight[l]);
-                        }
-                        fprintf(savefile, "\n");
-                    }
-                    else if (order==1){
-                        // std::cout<<"ERROR 1\n";
-                        std::priority_queue<std::pair<int, int>> res = std::priority_queue<std::pair<int, int>>();
-                        // std::cout<<"ERROR 2\n";
-                        int t = 0;
-                        for (int l=0; l<n; ++l){
-                            t+=cost_weight[l];
-                            res.push({-cost_weight[l],previews[l]});
-                        }
-                        for (int k=0; k<n; ++k){
-                            fprintf(savefile, "(%d,%d) ", res.top().second, -res.top().first);
-                            res.pop();
-                        }
-                        fprintf(savefile, "\n");
-                    }
-                    fclose(savefile);
-                }
-            }
-            fclose(file);
+int find(SET *s, int x){
+  if(x != s->pai[x])
+    s->pai[x] = find(s, s->pai[x]);
+  return s->pai[x];
+}
 
-        }
-        if (argc[index_arg][0]=='-' && argc[index_arg][1]=='h'){
-            std::cout<<"Para executar um algoritmo esteja branch \"main\", tenha o g++ e execute os seguintes passos:\n\n";
-            std::cout<<"1º: Acesse a pasta do algoritmo;\n\n";
-            std::cout<<"2º: Digite sem as aspas a palavra \"make\" para compilar.\n\n";
-            std::cout<<"3º: Digite sem as aspas a palavra \"./<nome_do_algoritmo> <parametros>\" para executar.\n\n";
-            std::cout<<"Em caso de dúvida digite -h como parâmetro.\n\n";
-            std::cout<<"Direcione a saída para um arquivo com o parâmetro -o e nome_do_arquivo.dat\n";
-            std::cout<<"Indique um arquivo que contém o grafo com o parâmetro -f e nome_do_arquivo.dat\n";
-            std::cout<<"Mostre a solução em ordem crescente com o parâmetro -s\n";
-            std::cout<<"Defina o vértice inicial com o parâmetro -i.\n\n";
-        }
+void unionSet(SET *s, int x, int y){
+  int temp;
+  if(s->rank[x] < s->rank[y]){
+    temp = x;
+    x = y;
+    y = temp;
+  }
+  s->pai[y] = x;
+  if(s->rank[x] == s->rank[y])
+    s->rank[x]++;
+}
+
+void merge(int **v, int comeco, int meio, int fim, int **arrAux, int peso){
+  int i = comeco, j = meio + 1, k = comeco;
+  while(i <= meio && j <= fim){
+    if((peso && v[i][2] < v[j][2]) || (!peso && (v[i][0] < v[j][0] || (v[i][0] == v[j][0] && v[i][1] < v[j][1])))){
+      arrAux[k++] = v[i++];
+    }else{
+      arrAux[k++] = v[j++];
     }
+  }
+  while(i <= meio)
+    arrAux[k++] = v[i++];
+  while(j <= fim)
+    arrAux[k++] = v[j++];
+  for(i = comeco; i <= fim; i++)
+    v[i] = arrAux[i];
+}
+
+void mergeSort(int **v, int comeco, int fim, int **arrAux, int peso){
+  if(comeco < fim){
+    int meio = (fim+comeco)/2;
+    mergeSort(v, comeco, meio, arrAux, peso);
+    mergeSort(v, meio+1, fim, arrAux, peso);
+    merge(v, comeco, meio, fim, arrAux, peso);
+  }
+}
+
+GRAFO* readGRAFO(FILE *inFile){
+  GRAFO *g = (GRAFO*) malloc(sizeof(GRAFO));
+  char line[MAX_LINE];
+  int i = -1, temp;
+  if(inFile != NULL)
+    fscanf(inFile, "%d %d", &(g->n), &(g->m));
+  else
+    scanf("%d %d", &(g->n), &(g->m));
+  g->arestas = (int**) malloc(g->m * sizeof(int*));
+  i = -1;
+  while(++i < g->m){
+    g->arestas[i] = (int*) malloc(3 * sizeof(int));
+    if(inFile != NULL)
+      fscanf(inFile, "\n%[^\n]", line);
+    else
+      scanf("\n%[^\n]", line);
+    if(sscanf(line, "%d %d %d", &g->arestas[i][0], &g->arestas[i][1], &g->arestas[i][2]) == 2)
+      g->arestas[i][2] = 1;
+    if(--g->arestas[i][0] > --g->arestas[i][1]){
+      temp = g->arestas[i][0];
+      g->arestas[i][0] = g->arestas[i][1];
+      g->arestas[i][1] = temp;
+    }
+  }
+  if(inFile != NULL)
+		fclose(inFile);
+  return g;
+}
+
+int kruskal(GRAFO *g, int **arestas, int **arrAux){
+  int u, v, i = -1, tot = 0, count = 0;
+  SET *s = makeSet(g->n);
+  mergeSort(g->arestas, 0, g->m - 1, arrAux, 1);
+  
+  while(++i < g->m){
+    u = find(s, g->arestas[i][0]);
+    v = find(s, g->arestas[i][1]);
+    if(u != v){
+      arestas[count++] = g->arestas[i];
+      tot += g->arestas[i][2];
+      if(count == g->n - 1)
+        return tot;
+      unionSet(s, u, v);
+    }
+  }
+  return tot;
+}
+
+int prim(GRAFO* g, int** arestas) {
+    int i = -1, tot = 0, count = 0;
+    int* key = (int*)malloc(g->n * sizeof(int));
+    int* parent = (int*)malloc(g->n * sizeof(int));
+    int* inMST = (int*)malloc(g->n * sizeof(int));
+    priority_queue< pair<int,int>, vector <pair<int,int>> , greater<pair<int,int>> > min_heap;
+    
+    
+    for (i = 0; i < g->n; i++) {
+        key[i] = INT_MAX;
+        parent[i] = -1;
+        inMST[i] = 0;
+    }
+
+    key[1] = 0;
+    min_heap.push(make_pair(0, 1));
+    
+    while (!min_heap.empty() && count < g->n - 1) {
+        int u = min_heap.top().second;
+        min_heap.pop();
+        
+        if (inMST[u] == 1)
+          continue;
+        
+        inMST[u] = 1;
+
+        for (i = 0; i < g->m; i++) {
+            int current_u = g->arestas[i][0];
+            int v = g->arestas[i][1];
+            int weight = g->arestas[i][2];
+            if (current_u == u) {
+              if (!inMST[v] && weight < key[v]) {
+                  parent[v] = u;
+                  min_heap.push(make_pair(key[v], v));
+                  key[v] = weight;
+              }
+            }
+        }
+        count++;
+    }
+
+
+    free(key);
+    free(parent);
+    free(inMST);
+    
+    return tot;
+}
+
+int readArgs(int argc, char *argv[], FILE **inFile, FILE **outFile, int *show){
+  int i = 0;
+  *show = 0;
+  *outFile = NULL;
+  *inFile = NULL;
+  while(++i < argc){
+    if(argv[i][0] != '-'){
+      printf("Argumento não reconhecido, use o comando -h para ajudar.\n");
+      return 0;
+    }
+    switch(argv[i][1]){
+      case 'h':
+        printf("Este programa tem o objetivo de calcular a \
+arvore geradora mínima de um grafo \
+não direcionado com vertices começando de 1 até n.\n\
+Não é definido vértices iniciais nem finais. Se o argumento s for \
+passado, ele mostrará também todas as arestas da arvore em ordem.\n\n\
+Argumentos do programa:\n\
+-h : mostra o help (Quando h é selecionado, invalida outros argumentos.)\n\
+-o <arquivo> : redireciona a saida para o \"arquivo\"\n\
+-f <arquivo> : indica o \"arquivo\" que contém o grafo de entrada\n\
+-s : mostra arestas da arvore (ordenadas)\n\
+-i : vértice inicial (não hablitado)\n\
+-l : vértice final (não hablitado)\n");
+        return 0;
+      case 'o':
+        *outFile = fopen(argv[++i], "w");
+        break;
+      case 'f':
+        *inFile = fopen(argv[++i], "r");
+        if(*inFile == NULL){
+          printf("arquivo de entrada não existe.\n");
+          return 0;
+        }
+        break;
+      case 's':
+        *show = 1;
+        break;
+      default:
+        printf("Comando não reconhecido, use o comando -h para ajudar.\n");
+        return 0;
+    }
+  }
+  return 1;
+}
+
+int main(int argc, char *argv[]) {
+  int **arestas, **arrAux, tot, j, i = -1, show;
+  FILE *outFile, *inFile;
+  if(!readArgs(argc, argv, &inFile, &outFile, &show)){
+    return 0;
+  }
+  GRAFO *g = readGRAFO(inFile);
+  arrAux = (int**) malloc(g->m * sizeof(int*));
+  arestas = (int**) malloc((g->n - 1) * sizeof(int*));
+  tot = kruskal(g, arestas, arrAux);
+  if(show){
+    mergeSort(arestas, 0, g->n - 2, arrAux, 0);
+    i = -1;
+    if(outFile != NULL){
+      while(++i < g->n - 1){
+        fprintf(outFile, "(%d,%d) ", arestas[i][0] + 1, arestas[i][1] + 1);
+      }
+      fclose(outFile);
+    }else{
+      while(++i < g->n - 1){
+        printf("(%d,%d) ", arestas[i][0] + 1, arestas[i][1] + 1);
+      }
+    }
+  }else{
+    if(outFile != NULL){
+      fprintf(outFile, "%d\n", tot);
+      fclose(outFile);
+    }else{
+      printf("%d\n", tot);
+    }
+  }
+  freeGRAFO(g);
+  free(arestas);
+  free(arrAux);
+  return 0;
 }
